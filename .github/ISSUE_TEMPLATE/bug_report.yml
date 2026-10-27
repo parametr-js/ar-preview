@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a problem with AR Preview
+labels: ["bug"]
+body:
+  - type: input
+    id: addon_version
+    attributes:
+      label: AR Preview version
+      placeholder: "e.g. 1.1.0"
+    validations:
+      required: true
+  - type: input
+    id: blender_version
+    attributes:
+      label: Blender version
+      description: Help > About Blender
+      placeholder: "e.g. 5.2.0"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "e.g. Windows 11, macOS 15"
+    validations:
+      required: true
+  - type: input
+    id: iphone
+    attributes:
+      label: iPhone model and iOS version
+      placeholder: "e.g. iPhone 15 Pro, iOS 26"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What you did, what you expected, what happened instead. Attach screenshots or the error message from Blender's system console if available.
+    validations:
+      required: true
