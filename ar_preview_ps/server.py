@@ -16,16 +16,23 @@
   /                 page with an AR link (rel="ar" opens AR Quick Look in AR mode)
   /version          number of the latest export, the page polls it and reloads
   /model_<n>.usdz   the exported file; a new name per export avoids the iOS cache
+
+No threads: a bpy.app.timers callback checks the socket every POLL_INTERVAL
+on Blender's main thread and answers at most one waiting request per call.
 """
 
 import base64
 import os
+import select
 import socket
-import threading
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from string import Template
 
-_server = None   # ThreadingHTTPServer while running
+import bpy
+
+POLL_INTERVAL = 0.1   # seconds between socket checks
+
+_server = None   # HTTPServer while running
 url = ""         # address encoded in the QR code
 
 # Shared with the server thread. Written by publish() only.
@@ -78,6 +85,7 @@ def _page():
 
 
 class _Handler(BaseHTTPRequestHandler):
+    timeout = 2  # seconds; a stalled connection can hold Blender at most this long
 
     def do_GET(self):
         self._respond(send_body=True)
@@ -139,22 +147,40 @@ def publish(file_path, info, lock_scale):
     state["version"] += 1
 
 
+def poll():
+    """Answer one waiting request, if any. Returns at once when nothing is waiting."""
+    if _server is None:
+        return
+    readable, _, _ = select.select([_server.socket], [], [], 0)
+    if readable:
+        _server.handle_request()
+
+
+def _timer():
+    if _server is None:
+        return None  # stops the timer
+    poll()
+    return POLL_INTERVAL
+
+
 def start(port, ip=""):
     """Start the server. Raises OSError if the port is taken."""
     global _server, url
     stop()
 
-    _server = ThreadingHTTPServer(("0.0.0.0", port), _Handler)
+    _server = HTTPServer(("0.0.0.0", port), _Handler)
+    _server.timeout = 0  # handle_request() does not wait for a connection
     url = "http://%s:%d/" % (ip or local_ip(), port)
 
-    thread = threading.Thread(target=_server.serve_forever, daemon=True)
-    thread.start()
+    # persistent: keeps serving after opening another .blend file
+    bpy.app.timers.register(_timer, persistent=True)
 
 
 def stop():
     global _server, url
+    if bpy.app.timers.is_registered(_timer):
+        bpy.app.timers.unregister(_timer)
     if _server is not None:
-        _server.shutdown()
         _server.server_close()
     _server = None
     url = ""
