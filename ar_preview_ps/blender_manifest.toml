@@ -1,0 +1,28 @@
+schema_version = "1.0.0"
+
+id = "ar_preview_ps"
+version = "1.1.0"
+name = "AR Preview"
+tagline = "View the scene in AR on iOS devices via USDZ and QR code"
+maintainer = "Parametr Studio <info@parametrstudio.cz>"
+type = "add-on"
+tags = ["3D View", "Import-Export"]
+
+blender_version_min = "4.5.0"
+
+license = ["SPDX:GPL-3.0-or-later"]
+copyright = [
+  "2026 Parametr Studio",
+  "2022 Project Nayuki (qrcodegen.py, MIT License)",
+]
+
+[permissions]
+network = "Local server sends the exported model to the phone"
+files = "Export USDZ files to disk"
+
+[build]
+paths_exclude_pattern = [
+  "__pycache__/",
+  "/.git/",
+  "*.zip",
+]

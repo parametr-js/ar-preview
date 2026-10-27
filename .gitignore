@@ -1,0 +1,9 @@
+# Sestavene balicky - publikuji se jako GitHub Release
+/dist/
+*.zip
+
+# Referencni materialy, nepatri do repozitare
+/reference/
+
+# Python cache
+__pycache__/
